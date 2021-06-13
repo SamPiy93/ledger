@@ -1,16 +1,19 @@
-const db = require("../models");
-const Ledger = db.ledgers
-const Op = db.Sequelize.Op
+const {processLedgerRequest} = require("../services/ledger.service");
 
-exports.findAll = (req, res) => {
-  console.log('inside controller')
-  Ledger.findAll().then(data => {
-    console.error('data => ', data);
-    res.send(data);
-  }).catch(error => {
-    console.error('error => ', error)
-    res.status(500).send({
-      message: 'error db querying...'
+exports.getLedgerRecordsByFilterCriteria = (req, res) => {
+  if (!req.body) {
+    res.status(400).send({
+      message: "Filter criteria cannot be empty"
+    });
+  }
+  const { startDate, endDate, frequency, weeklyAmount, timezone } = req.query;
+  
+  const ledgerRecords = processLedgerRequest(startDate, endDate, frequency, weeklyAmount, timezone) || {}
+  
+  if (!ledgerRecords) {
+    res.status(204).send({
+      message: 'no ledger records generated'
     })
-  })
+  }
+  res.status(200).send(ledgerRecords);
 }
